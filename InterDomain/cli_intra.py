@@ -2,11 +2,11 @@
 import argparse
 import logging
 import os
-from .processing import main
+from .processing_intra import main_intra
 import cooler
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Metadomain Peak Caller')
+    parser = argparse.ArgumentParser(description='InterDomain Intra-chromosomal Metadomain Caller')
     parser.add_argument('cool_file', help='Path to the .cool file')
     parser.add_argument('--n_workers', type=int, default=1, help='Number of workers for parallel processing')
     parser.add_argument('--cutoff', type=int, default=2000000, help='Cutoff value in base pairs')
@@ -22,16 +22,17 @@ def parse_args():
     parser.add_argument('--useSigma', action='store_true', help='Use Gaussian smoothing of Hi-C matrix to find peaks (in case of sparsity)')
     parser.add_argument('--sigma', type=float, default=0.75, help='Sigma value Gaussian smoothing')
     parser.add_argument('--prominence', type=float, default=4, help='Prominence value to identify peaks (how enriched above baseline should a metadomain)')
-    parser.add_argument('--filter_n', type=int, default=35, help='The width for the outside filter used as the local control')
-    parser.add_argument('--filter_width', type=int, default=3, help='The width for the inside filter used for calling metadomains')
+    parser.add_argument('--filter_n', type=int, default=15, help='The width for the outside filter used as the local control')
+    parser.add_argument('--filter_width', type=int, default=1, help='The width for the inside filter used for calling metadomains')
     parser.add_argument('--inter_pseudocount', type=float, default=0.5, help='Pseudocount for interchromosomal metadomains')
     parser.add_argument('--pco', type=float, default=20, help='P-value cutoff for calling metadomains')
     args = parser.parse_args()
     return args
 
-def main_cli():
+def main_cli_intra():
     args = parse_args()
     # Ensure output directories exist
+    args.output_dir = os.path.join(args.output_dir, 'intra/')
     os.makedirs(args.output_dir, exist_ok=True)
     intermediate_dir = os.path.join(args.output_dir, 'intermediate_files/')
     os.makedirs(intermediate_dir, exist_ok=True)
@@ -72,7 +73,7 @@ def main_cli():
     cool = cooler.Cooler(args.cool_file)
 
     # Call the main function with arguments
-    main(
+    main_intra(
         cool=cool,
         n_workers=args.n_workers,
         cutoff=args.cutoff,
@@ -95,4 +96,4 @@ def main_cli():
     )
 
 if __name__ == '__main__':
-    main_cli()
+    main_cli_intra()

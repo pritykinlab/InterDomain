@@ -4,7 +4,7 @@ import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 from .utils import prepare_inputs, compute_prominent_peaks, get_filter_pvalue, collapse_filter_and_peak_pvalues
 
-def main(
+def main_intra(
     cool,
     n_workers=1,
     cutoff=2000000,
@@ -60,7 +60,7 @@ def main(
     results = pd.concat(results, axis=0)
     num_detected = len(results)
     logger.info(f"Number of metadomains detected: {num_detected}")
-    output_file = output_dir + f'intra_metadomains.{label}.res_{resolution}.tsv'
+    output_file = output_dir + f'/intra_metadomains.{label}.res_{resolution}.tsv'
     results.to_csv(output_file, sep='\t', index=False)
     logger.info(f"Results saved to {output_file}")
 
@@ -93,6 +93,8 @@ def run(kwargs):
     pco = kwargs.get('pco', 20)
     pmin = kwargs.get('pmin', 1e-300)
     frac_min_valid = kwargs.get('frac_min_valid', 0.0)
+    cutoff = kwargs.get('cutoff', 2000000)
+    resolution = kwargs.get('resolution', cool.binsize)
 
     bal_intra, raw_intra, oe = prepare_inputs(
         cool, chrom, chrom, minweight=minweight, pc=pc
@@ -100,6 +102,7 @@ def run(kwargs):
     peak_smooth_X1, peak_smooth_Y1, z = compute_prominent_peaks(
         oe, useSigma=useSigma, sigma=sigma, prominence=prominence
     )
+
     full_logp_mat = get_filter_pvalue(
         raw_intra,
         bal_intra,
@@ -112,7 +115,6 @@ def run(kwargs):
     collapsed_logp_mat = collapse_filter_and_peak_pvalues(
         full_logp_mat, peak_smooth_X1, peak_smooth_Y1, oe, pco=pco
     )
-
     if save_all:
         np.save(save_dir + f'{label}_chrL={chrom}_chrR={chrom}_peak_smooth_X1.npy', peak_smooth_X1)
         np.save(save_dir + f'{label}_chrL={chrom}_chrR={chrom}_peak_smooth_Y1.npy', peak_smooth_Y1)
@@ -122,6 +124,7 @@ def run(kwargs):
         np.save(save_dir + f'{label}_chrL={chrom}_chrR={chrom}_raw_intra.npy', raw_intra)
         np.save(save_dir + f'{label}_chrL={chrom}_chrR={chrom}_oe.npy', oe)
 
+    collapsed_logp_mat = np.triu(collapsed_logp_mat, k = cutoff // resolution)
     X, Y = np.where(collapsed_logp_mat > 0)
     log_p_values = collapsed_logp_mat[X, Y]
 

@@ -9,8 +9,8 @@ import scipy.signal
 logger = logging.getLogger(__name__)
 
 def prepare_inputs(cool, chrom1, chrom2, type='intra', minweight=0.0025, pc=1e-6):
-    bal_intra = cool.matrix().fetch(chrom1, chrom2)
-    raw_intra = cool.matrix(balance=False).fetch(chrom1, chrom2)
+    bal_mat = cool.matrix(balance=True).fetch(chrom1, chrom2)
+    raw_mat = cool.matrix(balance=False).fetch(chrom1, chrom2)
 
     w1 = cool.bins().fetch(chrom1)['weight']
     w2 = cool.bins().fetch(chrom2)['weight']
@@ -23,10 +23,11 @@ def prepare_inputs(cool, chrom1, chrom2, type='intra', minweight=0.0025, pc=1e-6
     nanind2[w2 > minweight] = 0
 
     extra_nan_filter = np.outer(nanind1, nanind2)
-    bal_intra[np.isnan(extra_nan_filter)] = np.nan
+    bal_mat[np.isnan(extra_nan_filter)] = np.nan
 
-    oe, exp = make_obs_exp_nolog(bal_intra, mat_type=type, pc=pc)
-    return bal_intra, raw_intra, oe
+    oe, exp = make_obs_exp_nolog(bal_mat, mat_type=type, pc=pc)
+    return bal_mat, raw_mat, oe
+
 
 def make_obs_exp_nolog(balanced_mat, mat_type='intra', pc=1e-6):
     exp = make_expected(balanced_mat, mat_type=mat_type)
@@ -64,7 +65,8 @@ def compute_prominent_peaks(oe, useSigma=False, sigma=0.75, prominence=4):
     peak_smooth_Y1 = scipy.ndimage.correlate(peak_Y1, ker) > 0
     return peak_smooth_X1, peak_smooth_Y1, z
 
-def get_filter_pvalue(raw_intra, bal_intra, type='intra', filter_n=35, filter_width=3, inter_pseudocount=0.5, pmin=1e-300, frac_min_valid=0.0):
+def get_filter_pvalue(raw_intra, bal_intra, type='intra', filter_n=35, filter_width=3, 
+                      inter_pseudocount=0.5, pmin=1e-300, frac_min_valid=0.0):
     raw_intra = raw_intra.copy().astype(float)
     if type == 'inter':
         _, full_logp_mat, _, _, _, _, _ = call_peak_with_poisson_and_peak_cutoff(
