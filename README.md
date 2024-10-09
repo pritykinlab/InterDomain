@@ -51,3 +51,22 @@ The commands are very similar with slight modifications to the hyperparameters. 
 - --filter_width: Size of the inside filter (intra default: 1; inter default: 3;).
 - --output_dir: Directory to save output files (default: 'bedfile_output/').
 - --cutoff: intra only; determines the minimum size of a metadomain (default: 2,000,000).
+
+
+### Outputs
+
+Results will be saved in the specified directory (--output_dir; default: 'bedfile_output/'). The output files will contain the metadomain coordinates and other relevant information, and are saved as .tsv files. Intra and inter-chromosomal results will be saved in separate directories (/intra/ and /inter/).
+
+Intermediate results can be saved in --save_intermediates, which can allow for better visualization of intermediate steps in the metadomain calling process.
+
+Intermediate files are as follows:
+- Observed and expected matrices
+- Balanced matrices
+- Smoothed matrices
+- Peak detection results
+- -LogP values
+
+
+### Plotting Metadomains
+
+After running the metadomain calling, you can visualize the top metadomains using the interdomain_plot command. This command is rather self-explanatory but requires the top_n argument to specify the number of metadomains to plot (and the output directory).
