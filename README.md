@@ -67,6 +67,10 @@ Intermediate files are as follows:
 - -LogP values
 
 
+
 ### Plotting Metadomains
 
-After running the metadomain calling, you can visualize the top metadomains using the interdomain_plot command. This command is rather self-explanatory but requires the top_n argument to specify the number of metadomains to plot (and the output directory).
+After running the metadomain calling, you can visualize the most significant metadomains using the interdomain_plot command. This command requires :
+- --top_n: specify the number of metadomains to plot
+- --output_dir: specify what the output dir was for your dataset
+- --type: specify whether to plot intrachromosomal or interchromosomal metadomains
