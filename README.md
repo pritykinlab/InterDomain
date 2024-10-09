@@ -4,25 +4,6 @@ InterDomain is a Python package for detecting metadomains in Hi-C contact matric
 
 ---
 
-## Table of Contents
-
-- [Installation](#installation)
-  - [Requirements](#requirements)
-  - [Installation Steps](#installation-steps)
-- [Usage](#usage)
-  - [Metadomain Calling](#metadomain-calling)
-    - [Intra-chromosomal Metadomains](#intra-chromosomal-metadomains)
-    - [Inter-chromosomal Metadomains](#inter-chromosomal-metadomains)
-  - [Plotting Metadomains](#plotting-metadomains)
-    - [Plotting Intra-chromosomal Metadomains](#plotting-intra-chromosomal-metadomains)
-    - [Plotting Inter-chromosomal Metadomains](#plotting-inter-chromosomal-metadomains)
-- [Output Files](#output-files)
-- [Example Workflow](#example-workflow)
-- [Additional Notes](#additional-notes)
-- [License](#license)
-
----
-
 ## Installation
 
 ### Requirements
