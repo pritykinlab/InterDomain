@@ -35,7 +35,7 @@ InterDomain is a Python package for detecting metadomains in Hi-C contact matric
 - To perform inter-chromosomal metadomain calling, use the call_metadomains_inter command:
   - call_metadomains_inter path/to/your_file.cool 
 
-The commands are very similar with slight modifications to the hyperparameters. The following are the optional arguments for both commands:
+The commands are similar for both intra and inter metadomains, with slight modifications to the hyperparameters. The following are the main arguments for both commands:
 
 - --n_workers: Number of worker processes to use (default: 1; max: number of chromosomes).
 - --label: Label for the output files (default: 'test').
