@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: InterDomain
+Version: 0.2.0
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: cooler
+Requires-Dist: scipy
+Requires-Dist: matplotlib

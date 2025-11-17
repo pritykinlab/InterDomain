@@ -25,7 +25,52 @@ InterDomain is a Python package for detecting metadomains in Hi-C contact matric
    cd InterDomain
    pip install .
    ```
-      
+     
+## Tutorial
+
+This short tutorial walks through calling metadomains on a Treg dataset and plotting the top results.
+
+1) Download the Treg `.mcool` file
+
+- Download the Treg `.mcool` file from <LINK> and note its path on your machine. If using a multi-resolution `.mcool`, reference a specific resolution using a Cooler URI, e.g. `path/to/Treg_all.mcool::/resolutions/50000`.
+
+2) Run intra-chromosomal metadomain calling
+
+```bash
+call_metadomains_intra path/to/Treg_all.mcool::/resolutions/50000 \
+  --label Treg \
+  --n_workers 8 \
+  --save_intermediates \
+  --filter_width 1 \
+  --filter_n 15 \
+  --cutoff 0
+```
+
+3) Run inter-chromosomal metadomain calling
+
+```bash
+call_metadomains_inter path/to/Treg_all.mcool::/resolutions/50000 \
+  --label Treg \
+  --n_workers 8 \
+  --save_intermediates \
+  --filter_width 3 \
+  --filter_n 35
+```
+
+4) Plot the top metadomains
+
+- Replace `--type` with `intra` or `inter` depending on which results you want to visualize.
+
+```bash
+interdomain_plot \
+  --top_n 20 \
+  --output_dir bedfile_output/ \
+  --type inter
+```
+
+Notes:
+- Adjust `--n_workers` to match your available CPU cores.
+- If you used a `.cool` file instead of `.mcool`, pass its path directly (no resolution suffix).
 ## Usage
 
 ### Intra and Inter-chromosomal Metadomain Calling

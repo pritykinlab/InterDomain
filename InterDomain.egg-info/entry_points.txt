@@ -1,0 +1,4 @@
+[console_scripts]
+call_metadomains_inter = InterDomain.cli_inter:main_cli_inter
+call_metadomains_intra = InterDomain.cli_intra:main_cli_intra
+interdomain_plot = InterDomain.plotting:main_plot_cli
