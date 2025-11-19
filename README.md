@@ -78,20 +78,23 @@ Notes:
 
 The commands are similar for both intra and inter metadomains, with slight modifications to the hyperparameters. The following are the main arguments for both commands:
 
+These are the main arguments related to how the program is run:
 - --n_workers: Number of worker processes to use (default: 1; max: number of chromosomes).
 - --label: Label for the output files (default: 'test').
-- --save_intermediates: Save intermediate matrices for plotting and inspection of results (default: False).
-- --useSigma: Use sigma for smoothing (intra default: False; inter default: True; recommended for sparser matrices and interchromosomal matrices).
-- --sigma: Sigma value for smoothing if --useSigma is set (default: 0.75).
-- --prominence: Prominence threshold for peak detection (default: 4).
-- --minweight: Minimum weight for balancing (default: 0.0025).
-- --pc: Pseudocount for observed/expected calculations (default: 1e-6).
-- --pmin: Minimum p-value for statistical tests (default: 1e-300).
-- --frac_min_valid: Minimum fraction of valid pixels for filters (default: 0).
-- --filter_n: Size of the outside filter (default: 35).
-- --filter_width: Size of the inside filter (intra default: 1; inter default: 3;).
+- --save_intermediates: Save intermediate matrices for plotting and inspection of results (default: False). Will take up a lot of space.
 - --output_dir: Directory to save output files (default: 'bedfile_output/').
-- --cutoff: intra only; determines the minimum size of a metadomain (default: 2,000,000).
+
+Here are the main hyperparameters for the program, which can be adjusted to change the behavior of the program:
+- --filter_width: Size of the inside filter (intra default: 1; inter default: 3;). Increasing this will detect larger metadomains and more significant interactions; recommended to be larger for sparser datasets.
+- --sigma: Sigma value for smoothing if --useSigma is set (default: 2). Recommended for interchromosomal matrices, can be turned up if you see that your smoothed obs/exp contact map doesn't look smooth, especially on sparser datasets. 
+- --prominence: Prominence threshold for peak detection (default: 4). Lower values --> more metadomains detected. Higher values --> more stringent in calling metadomains.
+- --pco: P-value cutoff for calling metadomains (default: 5 for interchromosomal matrices; 20 for intrachromosomal matrices). Lower values --> more metadomains detected. This should be a decent balance between sensitivity and specificity.
+
+
+Here are other parameters which can be changed, but shouldn't need to be changed for most datasets:
+- --filter_n: Size of the outside filter (default: 15). This should already be a good outside filter for most datasets.
+- --useSigma: Use sigma for smoothing (intra default: False; inter default: True; recommended for sparser matrices and interchromosomal matrices). 
+- --cutoff: intra only; determines the minimum size of a metadomain (default: 2,000,000). This should already be a good cutoff for most datasets.
 
 
 ### Outputs
