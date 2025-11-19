@@ -130,7 +130,7 @@ def run(kwargs):
 
     results = pd.DataFrame()
     results['chrom'] = [chrom] * len(X)
-    results['start'] = X
-    results['end'] = Y
+    results['start'] = X * resolution
+    results['end'] = Y * resolution
     results['log_p_value'] = log_p_values
     return results

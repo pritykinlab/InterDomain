@@ -7,6 +7,10 @@ import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 from .utils import prepare_inputs, compute_prominent_peaks, get_filter_pvalue, collapse_filter_and_peak_pvalues
 
+# import logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+
 def main_inter(
     cool,
     n_workers=1,
@@ -16,7 +20,7 @@ def main_inter(
     output_dir='bedfile_output/',
     minweight=0.0025,
     pc=1e-6,
-    useSigma=False,
+    useSigma=True,
     sigma=2.0,
     prominence=4,
     filter_n=15,
@@ -32,7 +36,7 @@ def main_inter(
     if logger is None:
         logger = logging.getLogger(__name__)
 
-    chroms = cool.sizes
+    chroms = cool.chromsizes
     chroms = chroms[chroms > minChromSize]
     chroms = chroms.index
     chroms = [chrom for chrom in chroms if chrom not in chroms_to_ignore]
@@ -94,7 +98,7 @@ def run_inter(kwargs):
     save_dir = kwargs.get('save_dir', 'intermediate_files/')
     minweight = kwargs.get('minweight', 0.0025)
     pc = kwargs.get('pc', 1e-6)
-    useSigma = kwargs.get('useSigma', False)
+    useSigma = kwargs.get('useSigma', True)
     sigma = kwargs.get('sigma', 2.0)
     prominence = kwargs.get('prominence', 4)
     filter_n = kwargs.get('filter_n', 15)
@@ -103,12 +107,17 @@ def run_inter(kwargs):
     pco = kwargs.get('pco', 5)
     pmin = kwargs.get('pmin', 1e-300)
     frac_min_valid = kwargs.get('frac_min_valid', 0.0)
-
+    print("Running inter-chromosomal processing for", chrom1, "-", chrom2, flush=True)
+    print("Using parameters: useSigma={}, sigma={}, prominence={}".format(useSigma, sigma, prominence), flush=True)
+    print("Using parameters: filter_n={}, filter_width={}, inter_pseudocount={}, pco={}, pmin={}, frac_min_valid={}".format(filter_n, filter_width, inter_pseudocount, pco, pmin, frac_min_valid), flush=True)
     try:
         # Prepare inputs
         bal_inter, raw_inter, oe = prepare_inputs(
             cool, chrom1, chrom2, type='inter', minweight=minweight, pc=pc
         )
+        oe[oe > 200] = np.nan
+        bal_inter[np.isnan(oe)] = np.nan
+        raw_inter[np.isnan(bal_inter)] = 0
 
         # Compute prominent peaks
         peak_smooth_X1, peak_smooth_Y1, z = compute_prominent_peaks(
@@ -155,13 +164,14 @@ def run_inter(kwargs):
         bins_chrom2 = cool.bins().fetch(chrom2).reset_index(drop=True)
 
         results = pd.DataFrame()
-        results['chrom1'] = chrom1
         results['start1'] = bins_chrom1.iloc[X]['start'].values
         results['end1'] = bins_chrom1.iloc[X]['end'].values
+        results['chrom1'] = chrom1
         results['chrom2'] = chrom2
         results['start2'] = bins_chrom2.iloc[Y]['start'].values
         results['end2'] = bins_chrom2.iloc[Y]['end'].values
         results['log_p_value'] = log_p_values
+        results = results[['chrom1', 'start1', 'end1', 'chrom2', 'start2', 'end2', 'log_p_value']]
         return results
 
     except Exception as e:

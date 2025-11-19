@@ -11,6 +11,7 @@ setup(
         'cooler',
         'scipy',
         'matplotlib',
+	'pyparsing',
     ],
     entry_points={
         'console_scripts': [

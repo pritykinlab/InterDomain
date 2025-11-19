@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cooler
 import glob
-
+import matplotlib.ticker
 def parse_args():
     parser = argparse.ArgumentParser(description='Plot Top Hits of InterDomain Peak Caller')
     parser.add_argument('--output_dir', default='bedfile_output/', help='Directory containing output files and log file')
@@ -18,6 +18,26 @@ def parse_args():
     parser.add_argument('--type', choices=['intra', 'inter'], required=True, help='Type of metadomains to plot: "intra" or "inter"')
     args = parser.parse_args()
     return args
+
+def fix_locus(locus, chromsize, resolution):
+    chromsize = (chromsize // resolution)*resolution
+    chrom, start, end = locus
+    if start < 0:
+        print("Cropping start to 0")
+        newstart = 0
+        startpixel = (newstart-start)//resolution
+    else:
+        newstart = start
+        startpixel = (newstart-start)//resolution
+    if end > chromsize:
+        print("Cropping end to chromsize")
+        newend = chromsize
+        endpixel = (newend-start)//resolution
+    else:
+        newend = end
+        endpixel = (newend-start)//resolution
+    return (chrom, newstart, newend), startpixel, endpixel
+
 
 def main_plot_cli():
     args = parse_args()
@@ -113,19 +133,27 @@ def main_plot_cli():
         window_size = filter_n * 2  # Extend beyond the outside filter
 
         # Define the left and right regions
-        bin_start_L = max(0, start1 - window_size)
-        bin_end_L = end1 + window_size
-        region_L = (chrom1, bin_start_L * resolution, bin_end_L * resolution)
+        start_L = start1 - window_size * resolution
+        end_L = end1 + window_size * resolution
+        start_R = start2 - window_size * resolution
+        end_R = end2 + window_size * resolution
+        region_L = (chrom1, start_L, end_L)
+        region_R = (chrom2, start_R, end_R)
 
-        bin_start_R = max(0, start2 - window_size)
-        bin_end_R = end2 + window_size
-        region_R = (chrom2, bin_start_R * resolution, bin_end_R * resolution)
 
+        region_L, region_L_pixel_start, region_L_pixel_end = fix_locus(region_L, cool.chromsizes[chrom1], resolution)
+        region_R, region_R_pixel_start, region_R_pixel_end = fix_locus(region_R, cool.chromsizes[chrom2], resolution)
+
+        n_pxl = int((end_L - start_L)/resolution)
+        mat = np.zeros((n_pxl, n_pxl))
         # Fetch the interaction matrix between region_L and region_R
-        mat = cool.matrix(balance=True).fetch(region_L, region_R)
+        fetched_mat = cool.matrix(balance=True).fetch(region_L, region_R)
+
+        mat[region_L_pixel_start:region_L_pixel_end, region_R_pixel_start:region_R_pixel_end] = fetched_mat
+
 
         # Determine if regions cross over into each other (diagonal is included)
-        diagonal_included = (chrom1 == chrom2) and (bin_end_L > bin_start_R) and (bin_end_R > bin_start_L)
+        diagonal_included = (chrom1 == chrom2) and (end_L > start_R) and (end_R > start_L)
 
         # If diagonal is included, take logarithm of raw Hi-C data before plotting
         if diagonal_included:
@@ -136,18 +164,20 @@ def main_plot_cli():
             mat_to_plot = np.log1p(mat)
 
         plt.figure(figsize=(6,6))
-        plt.matshow(mat_to_plot, fignum=False, cmap='gist_heat_r')
+        plt.matshow(mat_to_plot, fignum=False, cmap='gist_heat_r',  extent=[region_L[1], region_L[2], region_R[2], region_R[1]])
         plt.title(f'Interaction between {chrom1}:{start1}-{end1} and {chrom2}:{start2}-{end2}\nLog_p_value {log_p_value}')
         ax = plt.gca()
 
         # Calculate positions for the filters
-        center_x = (start1 - bin_start_L)
-        center_y = (start2 - bin_start_R)
+        center_x = (region_L[2] + region_L[1]) / 2
+        print( center_x)
+        center_y = (region_R[2] + region_R[1]) / 2
+        print(center_y)
 
         # Inside filter rectangle
-        inside_size = filter_width
+        inside_size = filter_width * resolution
         rect_inside = plt.Rectangle(
-            (center_y - inside_size//2 - .5, center_x - inside_size//2 - .5),
+            (center_x - inside_size//2 , center_y - inside_size//2 ),
             inside_size,
             inside_size,
             edgecolor='green',
@@ -158,9 +188,9 @@ def main_plot_cli():
         ax.add_patch(rect_inside)
 
         # Outside filter rectangle
-        outside_size = filter_n
+        outside_size = filter_n * resolution
         rect_outside = plt.Rectangle(
-            (center_y - outside_size//2 - .5, center_x - outside_size//2 - .5),
+            (center_x - outside_size//2 , center_y - outside_size//2 ),
             outside_size,
             outside_size,
             edgecolor='black',
@@ -169,7 +199,13 @@ def main_plot_cli():
             label='Outside Filter'
         )
         ax.add_patch(rect_outside)
-
+        ## xticks funcformatter
+        def xticks_formatter(x, pos):
+            return f'{x/1e6:.2f}'
+        def yticks_formatter(x, pos):
+            return f'{x/1e6:.2f}'
+        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(xticks_formatter))
+        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(yticks_formatter))
         plt.legend(handles=[rect_inside, rect_outside], loc='upper right')
 
         if save_plots:
@@ -219,8 +255,8 @@ def main_plot_cli():
                     oe = np.load(oe_file)
 
                     # Extract the relevant submatrices
-                    slice_L = slice(bin_start_L, bin_end_L)
-                    slice_R = slice(bin_start_R, bin_end_R)
+                    slice_L = slice(region_L[1] // resolution, region_L[2] // resolution)
+                    slice_R = slice(region_R[1] // resolution, region_R[2] // resolution)
 
                     full_logp_mat_sub = full_logp_mat[slice_L, slice_R]
                     collapsed_logp_mat_sub = collapsed_logp_mat[slice_L, slice_R]
@@ -267,13 +303,12 @@ def main_plot_cli():
                     fig, axes = plt.subplots(2, 2, figsize=(10, 10))
                     axes = np.ravel(axes)
                     for ax, (name, matrix) in zip(axes, intermediate_matrices.items()):
-                        im = ax.matshow(matrix, 
-                                        **kwargs[name])
+                        im = ax.matshow(matrix, **kwargs[name],
+                            extent = [region_L[1], region_L[2], region_R[2], region_R[1]])
                         ax.set_title(titles[name])
                         fig.colorbar(im, ax=ax, shrink=.4)
-                        inside_size = filter_width
                         rect_inside = plt.Rectangle(
-                            (center_y - .5 - inside_size//2, center_x - .5 - inside_size//2),
+                            (center_x - inside_size//2 , center_y - inside_size//2 ),
                             inside_size,
                             inside_size,
                             edgecolor='green',
@@ -283,10 +318,8 @@ def main_plot_cli():
                         )
                         ax.add_patch(rect_inside)
 
-                        # Outside filter rectangle
-                        outside_size = filter_n
                         rect_outside = plt.Rectangle(
-                            (center_y - .5 - outside_size//2, center_x - .5 - outside_size//2),
+                            (center_x - outside_size//2, center_y - outside_size//2),
                             outside_size,
                             outside_size,
                             edgecolor='black',
@@ -295,7 +328,13 @@ def main_plot_cli():
                             label='Outside Filter'
                         )
                         ax.add_patch(rect_outside)
-
+                        # xticks funcformatter
+                        def xticks_formatter(x, pos):
+                            return f'{x/1e6:.2f}'
+                        def yticks_formatter(x, pos):
+                            return f'{x/1e6:.2f}'
+                        ax.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(xticks_formatter))
+                        ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(yticks_formatter))
                     plt.legend(handles=[rect_inside, rect_outside], loc='upper right')
 
                     if save_plots:

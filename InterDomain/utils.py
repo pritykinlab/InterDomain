@@ -92,8 +92,9 @@ def get_filter_pvalue(raw_intra, bal_intra, type='intra', filter_n=35, filter_wi
             pmin=pmin,
             frac_min_valid=frac_min_valid,
         )
-
-    full_logp_mat[np.isnan(bal_intra)] = 0
+    nan_marker = np.isnan(bal_intra)
+    nan_marker_expanded = scipy.ndimage.binary_dilation(nan_marker)
+    full_logp_mat[nan_marker_expanded] = 0
     return full_logp_mat
 
 def collapse_filter_and_peak_pvalues(full_logp_mat, peak_smooth_X1, peak_smooth_Y1, oe, pco=20):

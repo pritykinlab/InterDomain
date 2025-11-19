@@ -32,7 +32,8 @@ This short tutorial walks through calling metadomains on a Treg dataset and plot
 
 1) Download the Treg `.mcool` file
 
-- Download the Treg `.mcool` file from <LINK> and note its path on your machine. If using a multi-resolution `.mcool`, reference a specific resolution using a Cooler URI, e.g. `path/to/Treg_all.mcool::/resolutions/50000`.
+
+- Download the Treg `.mcool` file from https://drive.google.com/drive/folders/1bsxRWz-5rAUNe-3OctKurxgIj7hCoTOs?usp=sharing and note its path on your machine. Reference a specific resolution using a Cooler URI, e.g. `path/to/Treg_all.mcool::/resolutions/50000`.
 
 2) Run intra-chromosomal metadomain calling
 
@@ -41,9 +42,6 @@ call_metadomains_intra path/to/Treg_all.mcool::/resolutions/50000 \
   --label Treg \
   --n_workers 8 \
   --save_intermediates \
-  --filter_width 1 \
-  --filter_n 15 \
-  --cutoff 0
 ```
 
 3) Run inter-chromosomal metadomain calling
@@ -53,8 +51,6 @@ call_metadomains_inter path/to/Treg_all.mcool::/resolutions/50000 \
   --label Treg \
   --n_workers 8 \
   --save_intermediates \
-  --filter_width 3 \
-  --filter_n 35
 ```
 
 4) Plot the top metadomains
